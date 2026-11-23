@@ -8,39 +8,43 @@ An enterprise-grade, autonomous multi-agent AI recipe platform engineered with *
 
 ```mermaid
 flowchart TD
-    User([User / Web Browser]) <--> UI[React 19 / TypeScript Dashboard]
-    UI <-->|REST API & SSE Streams| API[FastAPI Backend - port 8000]
+    User(["User / Web Browser"]) <--> UI["React 19 / TypeScript Dashboard"]
+    UI <-->|"REST API & SSE Streams"| API["FastAPI Backend (port 8000)"]
     
-    subgraph Multi-Agent Orchestration [LangGraph StateGraph]
-        Supervisor[Supervisor Router (MAX_HOPS=6)]
-        Critic[1. Culinary Critic & Allergen Guard Agent]
-        RecipeAgent[2. Recipe Scaling & Culinary Engine]
-        NutritionAgent[3. Nutrition Estimation Engine]
-        Synthesizer[4. Response Synthesizer]
+    subgraph MultiAgent ["Multi-Agent Orchestration (LangGraph StateGraph)"]
+        Supervisor["Supervisor Router (MAX_HOPS=6)"]
+        Critic["1. Culinary Critic & Allergen Guard"]
+        RecipeAgent["2. Recipe Scaling & Culinary Engine"]
+        NutritionAgent["3. Nutrition Estimation Engine"]
+        Synthesizer["4. Response Synthesizer"]
+        Approval["Human Approval Gate"]
         
         Supervisor --> Critic
-        Critic -->|Safety & Allergen Passed| RecipeAgent
-        Critic -->|Consequential Scaling >= 3x / Memory Write| Approval[Human Approval Gate]
-        RecipeAgent -->|Validated Scaled Quantities| NutritionAgent
-        NutritionAgent -->|Calculated Energy & Macros| Synthesizer
+        Critic -->|"Safety & Allergen Passed"| RecipeAgent
+        Critic -->|"Scaling ≥ 3x / Consequential"| Approval
+        Approval -->|"Approved"| RecipeAgent
+        RecipeAgent -->|"Validated Scaled Quantities"| NutritionAgent
+        NutritionAgent -->|"Calculated Energy & Macros"| Synthesizer
+        Synthesizer --> API
     end
     
-    API <--> Multi-Agent Orchestration
+    API <--> Supervisor
     
-    subgraph Persistent Storage
-        Checkpointer[(SQLite WAL Checkpointer)] <--> Multi-Agent Orchestration
-        LongTermStore[(SQLite Profile Store)] <--> Multi-Agent Orchestration
-        RecipesDB[(SQLite Recipes DB - CRUD)] <--> API
-        ChromaDB[(Chroma Vector DB)] <--> RAG[Local RAG Engine]
+    subgraph Storage ["Persistent Storage Tier"]
+        Checkpointer[("SQLite WAL Checkpointer")] <--> Supervisor
+        LongTermStore[("SQLite Profile Store")] <--> Supervisor
+        RecipesDB[("SQLite Recipes DB")] <--> API
+        ChromaDB[("Chroma Vector DB")] <--> RAG["Local RAG Engine"]
     end
     
-    subgraph Local Ollama Engine
-        Qwen[qwen2.5:3b - Local LLM]
-        Nomic[nomic-embed-text - 768 dims Vector Embeddings]
+    subgraph LocalOllama ["Local Ollama Engine"]
+        Qwen["qwen2.5:3b (Local LLM)"]
+        Nomic["nomic-embed-text (768-dim Vectors)"]
     end
     
     Critic & Synthesizer <--> Qwen
     RAG <--> Nomic
+    RAG <--> Critic
 ```
 
 ---
