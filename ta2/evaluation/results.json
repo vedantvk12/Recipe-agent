@@ -1,0 +1,98 @@
+{
+  "timestamp": "2026-10-20 17:49:59",
+  "total_test_cases": 5,
+  "ta1_pass_rate": "40.0% (2/5)",
+  "ta2_pass_rate": "100.0% (5/5)",
+  "results": [
+    {
+      "id": "TC-01",
+      "name": "Standard Recipe Scaling & Calorie Calculation",
+      "ta1": {
+        "status": "PASS",
+        "latency_ms": 35289.16,
+        "tool_calls": 2,
+        "answer_excerpt": "The recipe has been scaled to serve 8 people, and the amount of flour is now 4 cups. Given that each...",
+        "notes": "Single-turn ReAct agent"
+      },
+      "ta2": {
+        "status": "PASS",
+        "latency_ms": 22.15,
+        "tool_calls": 4,
+        "answer_excerpt": "\u2705 The recipe has been scaled from 4 to 8 servings.\n- Ingredient: 4.0 cups of flour (originally 2.0 c...",
+        "notes": "Multi-agent coordination with exact formula breakdown"
+      }
+    },
+    {
+      "id": "TC-02",
+      "name": "Missing Information & Multi-Turn Context Follow-Up",
+      "ta1": {
+        "status": "UNSUPPORTED",
+        "latency_ms": null,
+        "tool_calls": 0,
+        "answer_excerpt": "Amnesia on turn 2 (lacks thread checkpointer)",
+        "notes": "Unsupported (TA1 ReAct executor is stateless and does not maintain thread_id)"
+      },
+      "ta2": {
+        "status": "PASS",
+        "latency_ms": 43.78,
+        "tool_calls": 2,
+        "answer_excerpt": "\u2705 The recipe has been scaled from 4 to 8 servings.\n- Ingredient: 4.0 units of ingredient (originally...",
+        "notes": "Short-term SQLite checkpointer successfully resumed thread context"
+      }
+    },
+    {
+      "id": "TC-03",
+      "name": "Long-Term Memory Persistence & Recall",
+      "ta1": {
+        "status": "UNSUPPORTED",
+        "latency_ms": null,
+        "tool_calls": 0,
+        "answer_excerpt": "No long-term store implemented",
+        "notes": "TA1 baseline possesses no long-term store"
+      },
+      "ta2": {
+        "status": "PASS",
+        "latency_ms": 0.0,
+        "tool_calls": 0,
+        "answer_excerpt": "Recalled {'calorie_target_per_serving': 450, 'default_servings': 4, 'preferred_units': 'metric_grams'}",
+        "notes": "Persistent SQLite store survived cold restart with zero data loss"
+      }
+    },
+    {
+      "id": "TC-04",
+      "name": "Grounded Knowledge Retrieval via Local RAG",
+      "ta1": {
+        "status": "UNSUPPORTED",
+        "latency_ms": null,
+        "tool_calls": 0,
+        "answer_excerpt": "No vector database or document retrieval",
+        "notes": "TA1 cannot perform grounded document lookup"
+      },
+      "ta2": {
+        "status": "PASS",
+        "latency_ms": 9481.48,
+        "tool_calls": 0,
+        "answer_excerpt": "1 cup of all-purpose flour weighs 120 grams and contains approximately 455 kcal per cup. [ingredient...",
+        "notes": "Chroma vector store retrieved exact source citation [ingredient_unit_conversions.md]"
+      }
+    },
+    {
+      "id": "TC-05",
+      "name": "Defensive Validation & Consequential Oversight",
+      "ta1": {
+        "status": "PASS (Partial)",
+        "latency_ms": 1.15,
+        "tool_calls": 1,
+        "answer_excerpt": "{\"status\": \"error\", \"message\": \"Original servings must be greater than zero.\"}",
+        "notes": "Arithmetic validation passes, but lacks human approval gate for extreme scaling"
+      },
+      "ta2": {
+        "status": "PASS",
+        "latency_ms": 13.71,
+        "tool_calls": 0,
+        "answer_excerpt": "Created approval ticket for 12.5x scaling",
+        "notes": "Culinary Critic & Guard Agent triggered pending human approval ticket"
+      }
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Send, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 type RecipeInputProps = {

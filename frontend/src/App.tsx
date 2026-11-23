@@ -1,105 +1,141 @@
-import { useState } from 'react'
-import Header from './components/Header'
-import RecipeInput from './components/RecipeInput'
-import AgentTrace from './components/AgentTrace'
-import ResultCard from './components/ResultCard'
+import { useState, useEffect } from 'react';
+import Sidebar from './components/Sidebar';
+import type { TabType } from './components/Sidebar';
+import TopBar from './components/TopBar';
+import OverviewTab from './components/OverviewTab';
+import RecipeStudioTab from './components/RecipeStudioTab';
+import TraceExplorerTab from './components/TraceExplorerTab';
+import KnowledgeBaseTab from './components/KnowledgeBaseTab';
+import MemoryCenterTab from './components/MemoryCenterTab';
+import EvaluationLabTab from './components/EvaluationLabTab';
+import SettingsTab from './components/SettingsTab';
+import { apiClient } from './api/client';
+import type { HealthStatus, EvaluationResult, RecipeResponse, TraceStep } from './api/client';
 
-export type TraceStep = {
-  step: number
-  tool: string
-  arguments: Record<string, any>
-  result: Record<string, any>
-}
+export type { TraceStep, RecipeResponse };
 
-export type ApiResponse = {
-  success: boolean
-  final_answer: string
-  trace: TraceStep[]
-}
+export default function App() {
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [threadId, setThreadId] = useState<string>('session_main');
+  const [userId, setUserId] = useState<string>('chef_elena');
+  const [health, setHealth] = useState<HealthStatus | null>(null);
+  const [evalData, setEvalData] = useState<EvaluationResult | null>(null);
+  const [pendingApprovals, setPendingApprovals] = useState<any[]>([]);
+  const [currentTrace, setCurrentTrace] = useState<TraceStep[]>([]);
+  const [isBackendConnected, setIsBackendConnected] = useState<boolean>(true);
 
-function App() {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [response, setResponse] = useState<ApiResponse | null>(null)
+  useEffect(() => {
+    refreshAllData();
+    const interval = setInterval(checkHealthAndApprovals, 15000);
+    return () => clearInterval(interval);
+  }, [threadId, userId]);
 
-  const handleRunAgent = async (question: string) => {
-    if (!question.trim()) {
-      setError("Please enter a recipe request.")
-      return
-    }
-
-    setLoading(true)
-    setError(null)
-    setResponse(null)
-
+  const checkHealthAndApprovals = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/recipe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question })
-      })
-
-      if (!res.ok) {
-        throw new Error("Unable to connect to the Python AI Agent. Please make sure FastAPI and Ollama are running.")
-      }
-
-      const data = await res.json()
-      if (data.success) {
-        setResponse(data)
-      } else {
-        setError(data.detail || "Unknown error occurred.")
-      }
-    } catch (err: any) {
-      setError("Unable to connect to the Python AI Agent.\n\nPlease make sure:\n1. FastAPI is running.\n2. Ollama is running.\n3. qwen2.5:3b is installed.")
-    } finally {
-      setLoading(false)
+      const h = await apiClient.getHealth();
+      setHealth(h);
+      setIsBackendConnected(true);
+      const apprs = await apiClient.getPendingApprovals();
+      setPendingApprovals(apprs.pending_approvals || []);
+    } catch {
+      setIsBackendConnected(false);
     }
-  }
+  };
+
+  const refreshAllData = async () => {
+    try {
+      const [h, ev, apprs] = await Promise.all([
+        apiClient.getHealth().catch(() => null),
+        apiClient.getEvaluationResults().catch(() => null),
+        apiClient.getPendingApprovals().catch(() => ({ pending_approvals: [] })),
+      ]);
+      if (h) {
+        setHealth(h);
+        setIsBackendConnected(true);
+      } else {
+        setIsBackendConnected(false);
+      }
+      if (ev) setEvalData(ev);
+      if (apprs) setPendingApprovals(apprs.pending_approvals || []);
+    } catch {
+      setIsBackendConnected(false);
+    }
+  };
+
+  const handleExecutionComplete = (res: RecipeResponse) => {
+    if (res.trace && res.trace.length > 0) {
+      setCurrentTrace(res.trace);
+    }
+    checkHealthAndApprovals();
+  };
+
+  const handleNewSession = () => {
+    const newId = `session_${Math.random().toString(36).substring(2, 8)}`;
+    setThreadId(newId);
+    setCurrentTrace([]);
+  };
 
   return (
-    <div className="min-h-screen bg-background text-textMain pb-12 font-sans selection:bg-primary/30">
-      <Header />
+    <div className="flex h-screen bg-background text-textMain overflow-hidden font-sans selection:bg-primary/30">
+      {/* Sidebar Navigation */}
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        pendingApprovalsCount={pendingApprovals.length}
+      />
 
-      <main className="max-w-5xl mx-auto px-4 pt-10 flex flex-col gap-8">
-        {/* Hero Section */}
-        <section className="text-center flex flex-col items-center gap-4 py-8">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white">
-            🍳 Recipe Scaler & Nutrition Estimator
-          </h1>
-          <p className="text-textMuted max-w-2xl text-lg">
-            An Autonomous AI Agent that scales recipes and estimates nutrition using intelligent multi-tool reasoning.
-          </p>
-          <div className="flex gap-3 mt-4 flex-wrap justify-center">
-            <span className="px-3 py-1 bg-surfaceHighlight rounded-full text-sm font-medium border border-white/5 flex items-center gap-1.5"><span className="text-xl"></span> LangGraph Agent</span>
-            <span className="px-3 py-1 bg-surfaceHighlight rounded-full text-sm font-medium border border-white/5 flex items-center gap-1.5"><span className="text-xl"></span> Two Tools</span>
-            <span className="px-3 py-1 bg-surfaceHighlight rounded-full text-sm font-medium border border-white/5 flex items-center gap-1.5"><span className="text-xl"></span> Autonomous Reasoning</span>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Top Header */}
+        <TopBar
+          threadId={threadId}
+          setThreadId={setThreadId}
+          userId={userId}
+          setUserId={setUserId}
+          isBackendConnected={isBackendConnected}
+          onNewSession={handleNewSession}
+        />
+
+        {/* Tab View Container */}
+        <main className="flex-1 overflow-y-auto p-8">
+          <div className="max-w-6xl mx-auto">
+            {activeTab === 'overview' && (
+              <OverviewTab
+                health={health}
+                evalData={evalData}
+                setActiveTab={setActiveTab}
+                pendingCount={pendingApprovals.length}
+              />
+            )}
+            {activeTab === 'studio' && (
+              <RecipeStudioTab
+                threadId={threadId}
+                userId={userId}
+                onExecutionComplete={handleExecutionComplete}
+              />
+            )}
+            {activeTab === 'trace' && (
+              <TraceExplorerTab
+                trace={currentTrace}
+                threadId={threadId}
+                onRefreshApprovals={checkHealthAndApprovals}
+              />
+            )}
+            {activeTab === 'knowledge' && <KnowledgeBaseTab />}
+            {activeTab === 'memory' && (
+              <MemoryCenterTab
+                userId={userId}
+                threadId={threadId}
+                setUserId={setUserId}
+              />
+            )}
+            {activeTab === 'evaluation' && <EvaluationLabTab />}
+            {activeTab === 'settings' && (
+              <SettingsTab health={health} onRefreshHealth={checkHealthAndApprovals} />
+            )}
           </div>
-        </section>
-
-        {/* Input Section */}
-        <RecipeInput onRun={handleRunAgent} loading={loading} />
-
-        {/* Error State */}
-        {error && (
-          <div className="bg-red-500/10 border border-red-500/20 text-red-200 p-6 rounded-2xl flex flex-col gap-2">
-            <h3 className="font-semibold text-lg flex items-center gap-2">⚠️ Error</h3>
-            <pre className="whitespace-pre-wrap font-sans opacity-90">{error}</pre>
-          </div>
-        )}
-
-        {/* Trace Section */}
-        {response && response.trace && response.trace.length > 0 && (
-          <AgentTrace trace={response.trace} />
-        )}
-
-        {/* Final Result */}
-        {response && response.final_answer && (
-          <ResultCard answer={response.final_answer} trace={response.trace} />
-        )}
-
-      </main>
+        </main>
+      </div>
     </div>
-  )
+  );
 }
-
-export default App

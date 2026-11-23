@@ -1,0 +1,23 @@
+{
+  "run_id": "fdc3c83ed6",
+  "thread_id": "fresh_101",
+  "user_id": "default_chef",
+  "question": "Scale it to serve 8 people. Each cup has 455 calories.",
+  "final_answer": "I cannot scale the recipe because the following information is missing: target servings. Please provide these details.",
+  "scaling_result": {
+    "status": "error",
+    "error_type": "MissingInformation",
+    "message": "I cannot scale the recipe because the following information is missing: target servings. Please provide these details."
+  },
+  "nutrition_result": null,
+  "pending_approval": null,
+  "trace": [
+    {
+      "step": 1,
+      "agent": "Recipe Scaling Agent",
+      "action": "validate_inputs",
+      "status": "missing_info",
+      "details": "Missing: ['target servings']"
+    }
+  ]
+}

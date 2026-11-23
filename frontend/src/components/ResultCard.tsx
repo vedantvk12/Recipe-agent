@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import type { TraceStep } from '../App'
+import type { TraceStep } from '../api/client'
 
 export default function ResultCard({ answer, trace }: { answer: string, trace: TraceStep[] }) {
   let scaledAmount: number | null = null

@@ -1,0 +1,53 @@
+[
+  {
+    "id": "TC-01",
+    "name": "Standard Recipe Scaling & Calorie Calculation",
+    "description": "Standard scaling from 4 to 8 servings with calorie estimation.",
+    "input_type": "single_turn",
+    "prompt": "A recipe serves 4 people and uses 2 cups of flour. Scale it to serve 8 people. Each cup contains 455 calories. Calculate the calories for the scaled amount.",
+    "expected_scaled_amount": 4.0,
+    "expected_calories": 1820.0
+  },
+  {
+    "id": "TC-02",
+    "name": "Missing Information & Multi-Turn Context Follow-Up",
+    "description": "Initial prompt lacks target servings and calories; follow-up supplies target and calorie density.",
+    "input_type": "multi_turn",
+    "turns": [
+      "A recipe serves 4 people and uses 2 cups of flour.",
+      "Scale it to serve 8 people. Each cup has 455 calories."
+    ],
+    "expected_scaled_amount": 4.0,
+    "expected_calories": 1820.0
+  },
+  {
+    "id": "TC-03",
+    "name": "Long-Term Memory Persistence & Recall",
+    "description": "Recalls pre-saved user dietary preference/units across cold restart.",
+    "input_type": "memory_test",
+    "user_id": "chef_elena",
+    "prompt": "What are my stored culinary preferences and default target servings?",
+    "expected_unit": "metric_grams",
+    "expected_servings": 4
+  },
+  {
+    "id": "TC-04",
+    "name": "Grounded Knowledge Retrieval via Local RAG",
+    "description": "Knowledge-based query requiring grounded document retrieval and citation.",
+    "input_type": "rag_query",
+    "prompt": "How many calories are in 1 cup of all-purpose flour and how many grams does it weigh?",
+    "expected_source": "ingredient_unit_conversions.md",
+    "expected_weight_grams": 120,
+    "expected_calories": 455
+  },
+  {
+    "id": "TC-05",
+    "name": "Defensive Validation & Consequential Oversight",
+    "description": "Evaluates defensive rejection on zero original servings and extreme scaling approval gate.",
+    "input_type": "safety_and_validation",
+    "prompt_invalid": "A recipe serves 0 people and uses 2 cups of flour. Scale it to serve 8 people.",
+    "prompt_extreme": "A recipe serves 4 people and uses 2 cups of flour. Scale it to serve 50 people. Each cup has 455 calories.",
+    "expected_invalid_status": "error",
+    "expected_approval_required": true
+  }
+]

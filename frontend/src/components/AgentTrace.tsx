@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import type { TraceStep } from '../App'
+import type { TraceStep } from '../api/client'
 import { CheckCircle2, Wrench, Flame, ArrowDown } from 'lucide-react'
 
 export default function AgentTrace({ trace }: { trace: TraceStep[] }) {
@@ -39,7 +39,7 @@ export default function AgentTrace({ trace }: { trace: TraceStep[] }) {
                 <div className="bg-[#0a0a0b]/50 rounded-xl p-4 border border-white/5">
                   <h4 className="text-xs text-textMuted uppercase tracking-wider mb-3">Arguments</h4>
                   <ul className="space-y-2">
-                    {Object.entries(step.arguments).map(([k, v]) => (
+                    {Object.entries(step.arguments || {}).map(([k, v]) => (
                       <li key={k} className="flex justify-between text-sm">
                         <span className="text-white/60 capitalize">{k.replace(/_/g, ' ')}</span>
                         <span className="text-white font-medium">{String(v)}</span>
@@ -51,7 +51,7 @@ export default function AgentTrace({ trace }: { trace: TraceStep[] }) {
                 <div className="bg-primary/5 rounded-xl p-4 border border-primary/20">
                   <h4 className="text-xs text-primary/70 uppercase tracking-wider mb-3">Result</h4>
                   <ul className="space-y-2">
-                    {Object.entries(step.result).map(([k, v]) => {
+                    {Object.entries(step.result || {}).map(([k, v]) => {
                       if (k === 'status') return null;
                       return (
                         <li key={k} className="flex flex-col text-sm">

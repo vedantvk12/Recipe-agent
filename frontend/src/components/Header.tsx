@@ -1,4 +1,4 @@
-import { Activity } from 'lucide-react'
+// Header Component
 
 export default function Header() {
   return (

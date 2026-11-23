@@ -1,110 +1,148 @@
-# Recipe Scaler & Nutrition Estimator
+# Recipe Scaler & Nutrition Estimator — TA2 Agentic AI System
 
-## Project Overview
-This project demonstrates an autonomous AI Agent capable of chaining multiple tools. The agent receives a natural language request to scale a recipe and calculate its estimated calories, and it autonomously decides which tools to call and in what order to achieve the goal.
+An autonomous multi-agent AI system built on **LangGraph**, local **Ollama** (`qwen2.5:3b` and `nomic-embed-text`), persistent **SQLite checkpointing & long-term memory**, local **Chroma RAG**, and **Human-in-the-Loop safety guardrails**.
 
-## Architecture
+---
 
-```text
-User
- ↓
-AI Agent
- ↓
-Decision Making
- ↓
-scale_recipe Tool
- ↓
-Scaled Amount
- ↓
-estimate_calories Tool
- ↓
-Final Response
+## 1. System Architecture
+
+```mermaid
+flowchart TD
+    User([User / Browser]) <--> UI[React 19 Dashboard]
+    UI <-->|REST API| API[FastAPI Backend - port 8000]
+    
+    subgraph Multi-Agent Orchestration [LangGraph StateGraph]
+        Supervisor[Supervisor Router (MAX_HOPS=6)]
+        Critic[1. Culinary Critic & Guard Agent]
+        RecipeAgent[2. Recipe Scaling Agent]
+        NutritionAgent[3. Nutrition Estimation Agent]
+        Synthesizer[4. Response Synthesizer]
+        
+        Supervisor --> Critic
+        Critic -->|Safety Passed| RecipeAgent
+        Critic -->|Consequential Scaling / Memory Write| Approval[Human Approval Gate]
+        RecipeAgent -->|Validated Scaled Quantities| NutritionAgent
+        NutritionAgent -->|Calculated Energy| Synthesizer
+    end
+    
+    API <--> Multi-Agent Orchestration
+    
+    subgraph Persistent Storage
+        Checkpointer[(SQLite WAL Checkpointer)] <--> Multi-Agent Orchestration
+        LongTermStore[(SQLite Profile Store)] <--> Multi-Agent Orchestration
+        ChromaDB[(Chroma Vector DB)] <--> RAG[Local RAG Engine]
+    end
+    
+    subgraph Local Ollama Engine
+        Qwen[qwen2.5:3b - Temperature 0]
+        Nomic[nomic-embed-text - 768 dims]
+    end
+    
+    Critic & Synthesizer <--> Qwen
+    RAG <--> Nomic
 ```
 
-## Tools
+---
 
-### Tool 1: `scale_recipe()`
-**Purpose:** Scale ingredient quantities according to servings.
+## 2. Prerequisites (Windows)
 
-### Tool 2: `estimate_calories()`
-**Purpose:** Estimate total calories based on the scaled ingredient amount and calories per unit.
-
-## Why Two Tools?
-This project uses two simple tools instead of one large tool because each tool has a single responsibility. 
-`scale_recipe` is responsible only for ingredient scaling.
-`estimate_calories` is responsible only for calorie calculation.
-
-This design provides:
-- Better modularity
-- Easier testing
-- Better debugging
-- Reusability
-- Clear agent reasoning
-- Easier extension
-
-The AI agent demonstrates autonomous planning by deciding when to use one tool or both tools.
-
-## Installation
-
-1. Install Ollama from [https://ollama.com](https://ollama.com).
-2. Pull the model:
+1. **Install Ollama** from [https://ollama.com](https://ollama.com).
+2. **Pull the local models** (100% offline, zero API keys required):
    ```bash
    ollama pull qwen2.5:3b
+   ollama pull nomic-embed-text
    ```
-3. Install Python dependencies:
+3. **Install Python dependencies**:
    ```bash
    pip install -r requirements.txt
    ```
-4. Run the application:
+4. **Install Frontend dependencies**:
    ```bash
-   python main.py
+   cd frontend
+   npm install
+   cd ..
    ```
 
-## Jury Questions
+---
 
-### What happens if servings_original is 0?
-If `servings_original` is 0, scaling would normally cause a division-by-zero error.
-To prevent this, the `scale_recipe` tool validates the input before performing the calculation.
-If `servings_original <= 0`, the tool returns:
-`Error: Original servings must be greater than zero.`
-Therefore, the system does not crash.
+## 3. How to Run the Project
 
-### Is this better solved by one smarter tool or two simple tools?
-Two simple tools are preferred.
-The Single Responsibility Principle is followed.
-The scaling tool performs scaling only.
-The calorie tool performs calorie estimation only.
-The AI Agent coordinates the tools.
-This makes the system more modular and easier to test.
-It also demonstrates true agent behavior because the agent must decide which tool to call and in what order.
-A single large tool would hide the decision-making process and reduce tool reusability.
+### Option A: Full-Stack Web Application (Recommended)
 
-# Streamlit Web Interface
+Open two terminals:
 
-Installation:
+#### Terminal 1 — Start FastAPI Backend:
+```powershell
+uvicorn api:app --reload --host 127.0.0.1 --port 8000
+```
+*API Swagger Documentation is available at: [http://localhost:8000/docs](http://localhost:8000/docs)*
 
-```bash
-pip install -r requirements.txt
+#### Terminal 2 — Start React Web Dashboard:
+```powershell
+cd frontend
+npm run dev
+```
+*Web Dashboard is available at: [http://localhost:5173](http://localhost:5173)*
+
+---
+
+### Option B: Interactive Terminal CLI Runner
+
+Run the full interactive terminal interface with autonomous demo, RAG comparison, memory persistence, safety approval, and baseline validation options:
+
+```powershell
+python main.py
 ```
 
-Run:
+Menu options:
+1. Run TA2 Multi-Agent Autonomous Demo
+2. Run TA1-vs-TA2 Evaluation Suite (5 Shared Cases)
+3. Run Local RAG Demo (k=1 vs k=3 & Abstention)
+4. Run Long-Term Memory Persistence & Amnesia Demo
+5. Run Human Oversight & Safety Approval Demo
+6. Run Tool Failure & Recovery Demo
+7. Run Baseline TA1 Validation Tests
+8. Ask Custom Question
+9. Exit
 
-```bash
-streamlit run streamlit_app.py
-```
+---
 
-The Streamlit frontend is an interactive visual interface for the existing autonomous AI agent. It allows users to easily input recipes and visualize the agent's step-by-step tool selection and execution.
+## 4. Verification & Testing Commands
 
-```text
-Streamlit UI
-     ↓
-LangGraph ReAct Agent
-     ↓
-Autonomous Tool Selection
-     ↓
-scale_recipe
-     ↓
-estimate_calories
-     ↓
-Final Result
-```
+To run individual automated test suites:
+
+- **Run TA1 vs TA2 Evaluation Benchmark:**
+  ```powershell
+  python -m ta2.evaluation.evaluate
+  ```
+- **Test Multi-Turn Thread Continuity (Short-Term SQLite Checkpointer):**
+  ```powershell
+  python -m ta2.test_conversation
+  ```
+- **Test Long-Term Memory Persistence & Amnesia Comparison:**
+  ```powershell
+  python -m ta2.memory.seed_memory
+  ```
+- **Test Local Chroma RAG (k=1 vs k=3 Comparison & Unanswerable Question Abstention):**
+  ```powershell
+  python -m ta2.rag.retriever
+  ```
+- **Test Safety Guardrails & Human Approval Decision Paths:**
+  ```powershell
+  python -m ta2.test_safety_approval
+  ```
+- **Test Injected Tool Failure & Defensive Recovery:**
+  ```powershell
+  python -m ta2.test_tool_failure
+  ```
+- **Build Frontend TypeScript Bundle:**
+  ```powershell
+  cd frontend && npm run build
+  ```
+
+---
+
+## 5. Frozen TA1 Baseline
+
+The original TA1 baseline is preserved and frozen in:
+[`d:/AGENT/recipe-agent/ta1/`](file:///d:/AGENT/recipe-agent/ta1/)
