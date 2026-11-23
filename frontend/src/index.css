@@ -1,15 +1,18 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #0d1117;
-  --color-surface: #161b22;
-  --color-surfaceHighlight: #21262d;
-  --color-surfaceBorder: #30363d;
+  --color-background: #090d16;
+  --color-surface: #0f1523;
+  --color-surfaceHighlight: #182238;
+  --color-surfaceBorder: rgba(255, 255, 255, 0.08);
+  --color-surfaceBorderHover: rgba(255, 255, 255, 0.18);
   --color-primary: #10b981;
   --color-primaryHover: #059669;
+  --color-accent: #6366f1;
+  --color-accentHover: #4f46e5;
   --color-mintAccent: #34d399;
-  --color-textMain: #f0f6fc;
-  --color-textMuted: #8b949e;
+  --color-textMain: #f8fafc;
+  --color-textMuted: #94a3b8;
 }
 
 @layer base {
@@ -19,11 +22,11 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
   }
 }
 
-/* Custom scrollbar */
+/* Custom modern scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -32,9 +35,27 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #30363d;
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #484f58;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* Print Stylesheet for clean recipe printing */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+  aside, header, nav, button, .no-print {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+  .print-only {
+    display: block !important;
+  }
 }

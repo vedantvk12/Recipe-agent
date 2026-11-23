@@ -7,12 +7,13 @@ export default function ResultCard({ answer, trace }: { answer: string, trace: T
   let caloriesPerUnit: number | null = null
 
   trace.forEach(t => {
-    if (t.tool === 'scale_recipe' && t.result?.scaled_amount) {
-      scaledAmount = t.result.scaled_amount
+    const res = typeof t.result === 'object' && t.result !== null ? (t.result as Record<string, any>) : null
+    if (t.tool === 'scale_recipe' && res?.scaled_amount) {
+      scaledAmount = res.scaled_amount
     }
     if (t.tool === 'estimate_calories') {
-      if (t.result?.estimated_calories) {
-        totalCalories = t.result.estimated_calories
+      if (res?.estimated_calories) {
+        totalCalories = res.estimated_calories
       }
       if (t.arguments?.calories_per_unit) {
         caloriesPerUnit = t.arguments.calories_per_unit

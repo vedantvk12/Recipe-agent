@@ -1,5 +1,5 @@
 # Reproducible Evaluation Report: TA1 Baseline vs TA2 Agentic AI
-**Date/Time:** 2026-10-20 17:49:59  
+**Date/Time:** 2026-11-23 13:04:58  
 **Evaluation Corpus:** 5 Standardized Core Test Cases  
 **Overall Pass Rates:**
 - **TA1 Baseline:** 40.0% (2/5)
@@ -9,11 +9,11 @@
 
 | Test ID | Evaluation Scenario | TA1 Baseline | TA2 Agentic AI | TA2 Latency | Key TA2 Improvement |
 | :--- | :--- | :---: | :---: | :---: | :--- |
-| **TC-01** | Standard Recipe Scaling & Calorie Calculation | `PASS` | **`PASS`** | 22.15 ms | Multi-agent coordination with exact formula breakdown |
-| **TC-02** | Missing Information & Multi-Turn Context Follow-Up | `UNSUPPORTED` | **`PASS`** | 43.78 ms | Short-term SQLite checkpointer successfully resumed thread context |
-| **TC-03** | Long-Term Memory Persistence & Recall | `UNSUPPORTED` | **`PASS`** | N/A | Persistent SQLite store survived cold restart with zero data loss |
-| **TC-04** | Grounded Knowledge Retrieval via Local RAG | `UNSUPPORTED` | **`PASS`** | 9481.48 ms | Chroma vector store retrieved exact source citation [ingredient_unit_conversions.md] |
-| **TC-05** | Defensive Validation & Consequential Oversight | `PASS (Partial)` | **`PASS`** | 13.71 ms | Culinary Critic & Guard Agent triggered pending human approval ticket |
+| **TC-01** | Standard Recipe Scaling & Calorie Calculation | `PASS` | **`PASS`** | 52.26 ms | Multi-agent coordination with exact formula breakdown |
+| **TC-02** | Missing Information & Multi-Turn Context Follow-Up | `UNSUPPORTED` | **`PASS`** | 52.07 ms | Short-term SQLite checkpointer successfully resumed thread context |
+| **TC-03** | Long-Term Memory Persistence & Recall | `UNSUPPORTED` | **`PASS`** | 0.61 ms | Persistent SQLite store survived cold restart with zero data loss |
+| **TC-04** | Grounded Knowledge Retrieval via Local RAG | `UNSUPPORTED` | **`PASS`** | 21356.89 ms | Chroma vector store retrieved exact source citation [ingredient_unit_conversions.md] |
+| **TC-05** | Defensive Validation & Consequential Oversight | `PASS (Partial)` | **`PASS`** | 10.59 ms | Culinary Critic & Guard Agent triggered pending human approval ticket |
 
 ## Limitations & Architectural Analysis
 

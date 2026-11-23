@@ -35,11 +35,12 @@ def run_ta2_agent(
         "user_preferences": user_prefs,
         "memory_enabled": memory_enabled,
         "active_agent": "start",
-        "hop_count": 0
+        "hop_count": 0,
+        "is_safe": True,
+        "approval_status": approval_decision,
+        "pending_approval": None,
+        "final_response": None
     }
-    
-    if approval_decision:
-        initial_state["approval_status"] = approval_decision
 
     # 3. Invoke graph with SQLite checkpoint persistence
     final_state = ta2_agent_graph.invoke(initial_state, config=config)

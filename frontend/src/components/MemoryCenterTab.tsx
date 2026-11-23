@@ -89,14 +89,29 @@ export default function MemoryCenterTab({ userId, threadId }: MemoryCenterTabPro
             SQLite checkpointing for conversation thread continuity + persistent user profile store.
           </p>
         </div>
-        <button
-          onClick={handleSeed}
-          disabled={loading}
-          className="px-3 py-1.5 rounded-xl bg-surfaceHighlight hover:bg-surfaceHighlight/80 text-textMain text-xs font-semibold border border-surfaceBorder flex items-center gap-2 transition-all shadow-sm"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          Reset & Seed Profiles
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={async () => {
+              if (window.confirm(`Clear all long-term memories for ${userId}?`)) {
+                await apiClient.clearUserMemory(userId);
+                await loadMemoryData();
+              }
+            }}
+            disabled={loading}
+            className="px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold border border-rose-500/30 flex items-center gap-1.5 transition-all shadow-sm"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Clear Memory
+          </button>
+          <button
+            onClick={handleSeed}
+            disabled={loading}
+            className="px-3 py-1.5 rounded-xl bg-surfaceHighlight hover:bg-surfaceHighlight/80 text-textMain text-xs font-semibold border border-surfaceBorder flex items-center gap-2 transition-all shadow-sm"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            Reset & Seed Profiles
+          </button>
+        </div>
       </div>
 
       {/* Two Column Layout: Short-Term Thread State vs Long-Term Profile Store */}

@@ -4,11 +4,15 @@ import type { TabType } from './components/Sidebar';
 import TopBar from './components/TopBar';
 import OverviewTab from './components/OverviewTab';
 import RecipeStudioTab from './components/RecipeStudioTab';
-import TraceExplorerTab from './components/TraceExplorerTab';
-import KnowledgeBaseTab from './components/KnowledgeBaseTab';
+import RecipeCollectionTab from './components/RecipeCollectionTab';
+import RecipeScalingTab from './components/RecipeScalingTab';
+import NutritionIntelligenceTab from './components/NutritionIntelligenceTab';
 import MemoryCenterTab from './components/MemoryCenterTab';
+import KnowledgeBaseTab from './components/KnowledgeBaseTab';
+import AgentActivityTab from './components/AgentActivityTab';
 import EvaluationLabTab from './components/EvaluationLabTab';
 import SettingsTab from './components/SettingsTab';
+import GlobalSearchModal from './components/GlobalSearchModal';
 import { apiClient } from './api/client';
 import type { HealthStatus, EvaluationResult, RecipeResponse, TraceStep } from './api/client';
 
@@ -23,20 +27,44 @@ export default function App() {
   const [pendingApprovals, setPendingApprovals] = useState<any[]>([]);
   const [currentTrace, setCurrentTrace] = useState<TraceStep[]>([]);
   const [isBackendConnected, setIsBackendConnected] = useState<boolean>(true);
+  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
+  const [savedRecipesCount, setSavedRecipesCount] = useState<number>(0);
+  const [recipeToScale, setRecipeToScale] = useState<any | null>(null);
 
   useEffect(() => {
     refreshAllData();
-    const interval = setInterval(checkHealthAndApprovals, 15000);
+    const interval = setInterval(checkHealthAndApprovals, 12000);
     return () => clearInterval(interval);
   }, [threadId, userId]);
 
+  // Keyboard shortcut Ctrl+K / Cmd+K to open search modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsSearchOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const checkHealthAndApprovals = async () => {
     try {
-      const h = await apiClient.getHealth();
-      setHealth(h);
-      setIsBackendConnected(true);
-      const apprs = await apiClient.getPendingApprovals();
-      setPendingApprovals(apprs.pending_approvals || []);
+      const [h, apprs, recs] = await Promise.all([
+        apiClient.getHealth().catch(() => null),
+        apiClient.getPendingApprovals().catch(() => ({ pending_approvals: [] })),
+        apiClient.getSavedRecipes({ user_id: userId }).catch(() => ({ recipes: [] }))
+      ]);
+
+      if (h) {
+        setHealth(h);
+        setIsBackendConnected(true);
+      } else {
+        setIsBackendConnected(false);
+      }
+      setPendingApprovals(apprs?.pending_approvals || []);
+      setSavedRecipesCount(recs?.recipes?.length || 0);
     } catch {
       setIsBackendConnected(false);
     }
@@ -44,11 +72,13 @@ export default function App() {
 
   const refreshAllData = async () => {
     try {
-      const [h, ev, apprs] = await Promise.all([
+      const [h, ev, apprs, recs] = await Promise.all([
         apiClient.getHealth().catch(() => null),
         apiClient.getEvaluationResults().catch(() => null),
         apiClient.getPendingApprovals().catch(() => ({ pending_approvals: [] })),
+        apiClient.getSavedRecipes({ user_id: userId }).catch(() => ({ recipes: [] }))
       ]);
+
       if (h) {
         setHealth(h);
         setIsBackendConnected(true);
@@ -56,7 +86,8 @@ export default function App() {
         setIsBackendConnected(false);
       }
       if (ev) setEvalData(ev);
-      if (apprs) setPendingApprovals(apprs.pending_approvals || []);
+      setPendingApprovals(apprs?.pending_approvals || []);
+      setSavedRecipesCount(recs?.recipes?.length || 0);
     } catch {
       setIsBackendConnected(false);
     }
@@ -75,13 +106,29 @@ export default function App() {
     setCurrentTrace([]);
   };
 
+  const handleNavigateToScaling = (recipe: any) => {
+    setRecipeToScale(recipe);
+    setActiveTab('scaling');
+  };
+
   return (
-    <div className="flex h-screen bg-background text-textMain overflow-hidden font-sans selection:bg-primary/30">
+    <div className="flex h-screen bg-background text-textMain overflow-hidden font-sans selection:bg-emerald-500/20">
+      {/* Global Command Palette / Search Modal */}
+      <GlobalSearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        onNavigate={(tab, extra) => {
+          setActiveTab(tab);
+          if (extra) setRecipeToScale(extra);
+        }}
+      />
+
       {/* Sidebar Navigation */}
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         pendingApprovalsCount={pendingApprovals.length}
+        savedRecipesCount={savedRecipesCount}
       />
 
       {/* Main Content Area */}
@@ -92,12 +139,14 @@ export default function App() {
           setThreadId={setThreadId}
           userId={userId}
           setUserId={setUserId}
+          health={health}
           isBackendConnected={isBackendConnected}
           onNewSession={handleNewSession}
+          onOpenSearch={() => setIsSearchOpen(true)}
         />
 
         {/* Tab View Container */}
-        <main className="flex-1 overflow-y-auto p-8">
+        <main className="flex-1 overflow-y-auto p-6 md:p-8">
           <div className="max-w-6xl mx-auto">
             {activeTab === 'overview' && (
               <OverviewTab
@@ -105,6 +154,7 @@ export default function App() {
                 evalData={evalData}
                 setActiveTab={setActiveTab}
                 pendingCount={pendingApprovals.length}
+                userId={userId}
               />
             )}
             {activeTab === 'studio' && (
@@ -112,12 +162,29 @@ export default function App() {
                 threadId={threadId}
                 userId={userId}
                 onExecutionComplete={handleExecutionComplete}
+                onNavigateToScaling={handleNavigateToScaling}
               />
             )}
-            {activeTab === 'trace' && (
-              <TraceExplorerTab
+            {activeTab === 'collection' && (
+              <RecipeCollectionTab
+                userId={userId}
+                setActiveTab={setActiveTab}
+                onScaleRecipe={handleNavigateToScaling}
+              />
+            )}
+            {activeTab === 'scaling' && (
+              <RecipeScalingTab
+                initialRecipe={recipeToScale}
+              />
+            )}
+            {activeTab === 'nutrition' && (
+              <NutritionIntelligenceTab />
+            )}
+            {activeTab === 'activity' && (
+              <AgentActivityTab
                 trace={currentTrace}
                 threadId={threadId}
+                userId={userId}
                 onRefreshApprovals={checkHealthAndApprovals}
               />
             )}
@@ -126,12 +193,14 @@ export default function App() {
               <MemoryCenterTab
                 userId={userId}
                 threadId={threadId}
-                setUserId={setUserId}
               />
             )}
             {activeTab === 'evaluation' && <EvaluationLabTab />}
             {activeTab === 'settings' && (
-              <SettingsTab health={health} onRefreshHealth={checkHealthAndApprovals} />
+              <SettingsTab
+                health={health}
+                onRefreshHealth={checkHealthAndApprovals}
+              />
             )}
           </div>
         </main>

@@ -1,6 +1,6 @@
-# Recipe Scaler & Nutrition Estimator — TA2 Agentic AI System
+# Recipe Scaler & Nutrition Intelligence Platform — Production AI Multi-Agent System
 
-An autonomous multi-agent AI system built on **LangGraph**, local **Ollama** (`qwen2.5:3b` and `nomic-embed-text`), persistent **SQLite checkpointing & long-term memory**, local **Chroma RAG**, and **Human-in-the-Loop safety guardrails**.
+An enterprise-grade, autonomous multi-agent AI recipe platform engineered with **LangGraph StateGraph**, local **Ollama** (`qwen2.5:3b` and `nomic-embed-text`), persistent **SQLite checkpointing & long-term memory**, local **ChromaDB RAG**, non-linear **Culinary Scaling & Allergen Engines**, **Server-Sent Events (SSE) Multi-Agent Streaming**, and an award-winning **React 19 / TypeScript** dark-first SaaS interface.
 
 ---
 
@@ -8,21 +8,21 @@ An autonomous multi-agent AI system built on **LangGraph**, local **Ollama** (`q
 
 ```mermaid
 flowchart TD
-    User([User / Browser]) <--> UI[React 19 Dashboard]
-    UI <-->|REST API| API[FastAPI Backend - port 8000]
+    User([User / Web Browser]) <--> UI[React 19 / TypeScript Dashboard]
+    UI <-->|REST API & SSE Streams| API[FastAPI Backend - port 8000]
     
     subgraph Multi-Agent Orchestration [LangGraph StateGraph]
         Supervisor[Supervisor Router (MAX_HOPS=6)]
-        Critic[1. Culinary Critic & Guard Agent]
-        RecipeAgent[2. Recipe Scaling Agent]
-        NutritionAgent[3. Nutrition Estimation Agent]
+        Critic[1. Culinary Critic & Allergen Guard Agent]
+        RecipeAgent[2. Recipe Scaling & Culinary Engine]
+        NutritionAgent[3. Nutrition Estimation Engine]
         Synthesizer[4. Response Synthesizer]
         
         Supervisor --> Critic
-        Critic -->|Safety Passed| RecipeAgent
-        Critic -->|Consequential Scaling / Memory Write| Approval[Human Approval Gate]
+        Critic -->|Safety & Allergen Passed| RecipeAgent
+        Critic -->|Consequential Scaling >= 3x / Memory Write| Approval[Human Approval Gate]
         RecipeAgent -->|Validated Scaled Quantities| NutritionAgent
-        NutritionAgent -->|Calculated Energy| Synthesizer
+        NutritionAgent -->|Calculated Energy & Macros| Synthesizer
     end
     
     API <--> Multi-Agent Orchestration
@@ -30,12 +30,13 @@ flowchart TD
     subgraph Persistent Storage
         Checkpointer[(SQLite WAL Checkpointer)] <--> Multi-Agent Orchestration
         LongTermStore[(SQLite Profile Store)] <--> Multi-Agent Orchestration
+        RecipesDB[(SQLite Recipes DB - CRUD)] <--> API
         ChromaDB[(Chroma Vector DB)] <--> RAG[Local RAG Engine]
     end
     
     subgraph Local Ollama Engine
-        Qwen[qwen2.5:3b - Temperature 0]
-        Nomic[nomic-embed-text - 768 dims]
+        Qwen[qwen2.5:3b - Local LLM]
+        Nomic[nomic-embed-text - 768 dims Vector Embeddings]
     end
     
     Critic & Synthesizer <--> Qwen
@@ -44,20 +45,42 @@ flowchart TD
 
 ---
 
-## 2. Prerequisites (Windows)
+## 2. Key Capabilities & Features
+
+### Frontend (React 19 + TypeScript + Tailwind CSS)
+- **Dashboard / Overview**: Personalized executive dashboard with KPI metrics, quick generation templates, system health status, and recent recipes.
+- **AI Recipe Studio**: Natural-language and structured recipe generator with interactive ingredient tags, step checklists, servings/time controls, copy/print, and JSON export.
+- **Recipe Collection**: Full SQLite-backed recipe book with cuisine tags, favorites toggle, search, full recipe modal, and direct 1-click scaling.
+- **Recipe Scaling Studio**: Interactive servings slider with fractional unit conversion (e.g. `1 1/2 cups`), non-linear culinary scaling alerts (leaveners, spices, salt), and cooking vessel guidance.
+- **Nutrition Intelligence**: Macro breakdown cards (Calories, Protein, Carbs, Fat, Fiber, Sugar, Sodium), caloric split bar, per-serving vs. total yield toggle, and FDA disclaimer.
+- **Agent Activity (SSE Streaming)**: Live multi-agent execution pipeline displaying real-time node state (Supervisor, Critic, Scaler, Nutrition, Synthesizer) with millisecond timings and interactive Human Approval Gate.
+- **AI Memory Center**: Short-term SQLite thread inspector, long-term culinary profile manager, and persistent memory reset.
+- **Knowledge Base (RAG)**: ChromaDB semantic search interface with document viewer, chunk inspections, and citations.
+- **Global Search**: Modal search (`Ctrl+K`) for instant access across saved recipes and system actions.
+
+### Backend & AI Architecture (Python 3.13 + FastAPI + LangGraph)
+- **32 REST & SSE Endpoints**: Full API surface covering `/api/recipe/stream` (SSE), `/api/recipe/generate`, `/api/recipe/scale-advanced`, `/api/recipe/nutrition-analysis`, and `/api/recipes/saved` CRUD.
+- **Non-Linear Culinary Scaling (`scaling_engine.py`)**: Sub-linear scaling exponent ($S^{0.65}$ to $S^{0.75}$) for leaveners, spices, and salt; equipment recommendations and thermal warnings for large batch scaling.
+- **Allergen Guard (`allergy_guard.py`)**: Scans recipes for 9 major allergens (peanuts, tree nuts, dairy, gluten, eggs, soy, shellfish, fish, sesame) and suggests safe culinary substitutes.
+- **Nutrition Engine (`nutrition_engine.py`)**: Heuristic macro estimation, caloric percentage distribution, and per-serving calculations.
+- **Zero Hallucination RAG (`retriever.py`)**: ChromaDB vector store backed by `nomic-embed-text` with source citations and strict abstention.
+
+---
+
+## 3. Prerequisites (Windows)
 
 1. **Install Ollama** from [https://ollama.com](https://ollama.com).
-2. **Pull the local models** (100% offline, zero API keys required):
-   ```bash
+2. **Pull local models** (100% offline, zero API keys required):
+   ```powershell
    ollama pull qwen2.5:3b
    ollama pull nomic-embed-text
    ```
 3. **Install Python dependencies**:
-   ```bash
+   ```powershell
    pip install -r requirements.txt
    ```
 4. **Install Frontend dependencies**:
-   ```bash
+   ```powershell
    cd frontend
    npm install
    cd ..
@@ -65,7 +88,7 @@ flowchart TD
 
 ---
 
-## 3. How to Run the Project
+## 4. How to Run the Platform
 
 ### Option A: Full-Stack Web Application (Recommended)
 
@@ -88,8 +111,6 @@ npm run dev
 
 ### Option B: Interactive Terminal CLI Runner
 
-Run the full interactive terminal interface with autonomous demo, RAG comparison, memory persistence, safety approval, and baseline validation options:
-
 ```powershell
 python main.py
 ```
@@ -107,25 +128,13 @@ Menu options:
 
 ---
 
-## 4. Verification & Testing Commands
+## 5. Verification & Testing Commands
 
 To run individual automated test suites:
 
-- **Run TA1 vs TA2 Evaluation Benchmark:**
+- **Run TA1 vs TA2 Evaluation Benchmark (100% Pass Rate):**
   ```powershell
   python -m ta2.evaluation.evaluate
-  ```
-- **Test Multi-Turn Thread Continuity (Short-Term SQLite Checkpointer):**
-  ```powershell
-  python -m ta2.test_conversation
-  ```
-- **Test Long-Term Memory Persistence & Amnesia Comparison:**
-  ```powershell
-  python -m ta2.memory.seed_memory
-  ```
-- **Test Local Chroma RAG (k=1 vs k=3 Comparison & Unanswerable Question Abstention):**
-  ```powershell
-  python -m ta2.rag.retriever
   ```
 - **Test Safety Guardrails & Human Approval Decision Paths:**
   ```powershell
@@ -135,6 +144,18 @@ To run individual automated test suites:
   ```powershell
   python -m ta2.test_tool_failure
   ```
+- **Test Multi-Turn Thread Continuity (SQLite Checkpointer):**
+  ```powershell
+  python -m ta2.test_conversation
+  ```
+- **Test Long-Term Memory Persistence & Amnesia Comparison:**
+  ```powershell
+  python -m ta2.memory.seed_memory
+  ```
+- **Test Local Chroma RAG:**
+  ```powershell
+  python -m ta2.rag.retriever
+  ```
 - **Build Frontend TypeScript Bundle:**
   ```powershell
   cd frontend && npm run build
@@ -142,7 +163,7 @@ To run individual automated test suites:
 
 ---
 
-## 5. Frozen TA1 Baseline
+## 6. Frozen TA1 Baseline
 
 The original TA1 baseline is preserved and frozen in:
-[`d:/AGENT/recipe-agent/ta1/`](file:///d:/AGENT/recipe-agent/ta1/)
+[`ta1/`](file:///ta1/)

@@ -23,12 +23,20 @@ def critic_guard_node(state: AgentState) -> Dict[str, Any]:
     thread_id = state.get("thread_id", "default_thread")
     
     parsed = dict(state.get("parsed_request") or {})
-    if not parsed and user_text:
+    if user_text:
         from ta2.agents.recipe_agent import parse_recipe_from_text
-        parsed = parse_recipe_from_text(user_text)
+        new_parsed = parse_recipe_from_text(user_text)
+        for k, v in new_parsed.items():
+            if v is not None:
+                parsed[k] = v
     
-    # Assess safety
-    assessment = assess_operation_safety(parsed, user_text)
+    # Assess safety with allergy check
+    user_prefs = state.get("user_preferences") or {}
+    user_allergies = user_prefs.get("allergies") or []
+    if isinstance(user_allergies, str):
+        user_allergies = [a.strip() for a in user_allergies.split(",")]
+
+    assessment = assess_operation_safety(parsed, user_text, user_allergies=user_allergies)
     trace = state.get("execution_trace", [])
     
     if assessment.get("blocked"):
