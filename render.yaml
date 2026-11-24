@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: recipe-intelligence-api
+    runtime: python
+    region: oregon
+    plan: free
+    buildCommand: "pip install --upgrade pip && pip install -r requirements.txt"
+    startCommand: "uvicorn api:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: "/api/health"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9

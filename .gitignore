@@ -33,3 +33,11 @@ frontend/node_modules/
 frontend/dist/
 frontend/.env
 frontend/.eslintcache
+
+# SQLite WAL and temporary files
+*.sqlite-shm
+*.sqlite-wal
+
+# Deployment caches
+.vercel/
+.render/
